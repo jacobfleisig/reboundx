@@ -110,7 +110,12 @@ void rebx_add_modify_orbits_forces(struct reb_simulation* sim){
 	rebx->modify_orbits_forces.tau_omega = calloc(rebx->modify_orbits_forces.allocatedN, sizeof(double));
 	
 	rebx->Nforces++;
-	rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	if(!rebx->forces){
+		rebx->forces = malloc(sizeof(xptr));
+	}
+	else{
+		rebx->forces = realloc(rebx->forces, sizeof(xptr)*rebx->Nforces);
+	}
 	rebx->forces[rebx->Nforces-1] = rebx_modify_orbits_forces;
 	sim->additional_forces = rebx_forces;
 	sim->force_is_velocity_dependent = 1;
@@ -125,9 +130,15 @@ void rebx_add_modify_orbits_direct(struct reb_simulation* sim){
 	rebx->modify_orbits_direct.tau_omega = calloc(rebx->modify_orbits_direct.allocatedN, sizeof(double));
 	
 	rebx->Nptm++;
-	rebx->ptm = realloc(rebx->ptm, sizeof(xptr)*rebx->Nptm);
+	if(!rebx->ptm){
+		rebx->ptm = malloc(sizeof(xptr));
+	}
+	else{
+		rebx->ptm = realloc(rebx->ptm, sizeof(xptr)*rebx->Nptm);
+	}
 	rebx->ptm[rebx->Nptm-1] = rebx_modify_orbits_direct;
 	sim->post_timestep_modifications = rebx_ptm;
+	//sim->pre_timestep_modifications = rebx_ptm;
 }
 
 void rebx_add_gr(struct reb_simulation* sim, double c){
