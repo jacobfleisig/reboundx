@@ -3,6 +3,58 @@
 #include <stdio.h>
 #include "rebxtools.h"
 
+void rebx_tools_parameterized_force(sim, enum rebx_coordinates coordinates, int first_index, int last_index, function);
+    const int N_real = sim->N - sim->N_var;
+
+    struct reb_particle com;
+    double M_tot;
+    
+    if(last_index == -1){
+        last_index = N_real;
+    }
+
+    switch(params->coordinates){
+    case JACOBI:
+        com = reb_get_com(sim, first_index, last_index);            // We start with outermost particle, so start with COM and peel off particles
+        M_tot = com.m;
+        break;
+    case BARYCENTRIC:
+        com = reb_get_com_range(sim, first_index, last_index);     // COM of whole system
+        M_tot = com.m;
+        break;
+    default:
+        fprintf(stderr, "coordinates in parameters for modify_orbits_forces are not supported.\n");
+        exit(1);
+    }
+
+    int last;
+    double massratio;
+
+    for(int i=last_index-1;i>first;--i){
+        struct reb_particle* p = &sim->particles[i];
+        if(params->coordinates == JACOBI){
+            M_tot = com.m;
+            rebxtools_update_com_without_particle(&com, p);
+        }
+
+        function(sim, p, com);
+        
+        last = last_index;
+        if(coordinates == JACOBI){
+            last = i+1;
+        }
+        
+        massratio = p->m/M_tot;
+        for(int i=first; i < last; i++){
+            sim->particles[i].ax -= massratio*ax;
+            sim->particles[i].ay -= massratio*ay;
+            sim->particles[i].az -= massratio*az;
+        }
+    }
+
+void rebx_apply_back_reactions(reb_simulation* sim, enum rebx_coordinates coordinates, int first, int index, double massratio, double ax, double ay, double az){
+}
+
 static const struct reb_orbit reb_orbit_nan = {.d = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};
 
 #define MIN_REL_ERROR 1.0e-12   ///< Close to smallest relative floating point number, used for orbit calculation

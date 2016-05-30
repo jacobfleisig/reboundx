@@ -52,6 +52,14 @@ enum REBX_COORDINATES{
     HELIOCENTRIC                        ///< Coordinates referenced to particles[0] in the simulation.
 };
 
+/**
+ * @brief Enumeration for different ways of applying uncompensated back-reactions.
+ */
+enum REBX_BACK_REACTIONS{
+    NONE,                               ///< Don't apply uncompensated back-reactions.  Center of mass may drift.
+    BARYCENTRIC,                        ///< Apply same back-reaction to particles with indices between first and last to keep COM fixed.
+}
+
 /*****************************************
   Parameter structures for each effect
 ******************************************/
@@ -105,6 +113,7 @@ struct rebx_params_radiation_forces {
  * @return Returns a pointer to a rebx_extras structure, which holds all the information REBOUNDx needs.
  */
 struct rebx_extras* rebx_init(struct reb_simulation* sim);
+
 /**
  * @brief Frees all memory allocated by REBOUNDx instance.
  * @details Should be called after simulation is done if memory is a concern.

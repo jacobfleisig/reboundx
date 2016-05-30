@@ -57,6 +57,14 @@ struct rebx_param_to_be_freed{
     struct rebx_param_to_be_freed* next;// Pointer to the next node in the linked list rebx_extras.params_to_be_freed.
 };
 
+/*  Structure for options on how to deal with uncompensated back-reactions.
+ */
+struct rebx_back_reactions{
+    enum REBX_BACK_REACTIONS scheme;    // Scheme to apply in order to keep center of mass fixed.
+    int first;                          // First index in particles array on which to apply back-reactions.
+    int last;                           // Last index in particles array on which to apply back-reactions (exclusive, e.g., 7 applies back-reactions on particles up to index 6).
+}
+
 /****************************************
 Main REBOUNDx structure
 *****************************************/
@@ -64,7 +72,7 @@ struct rebx_extras {
 	struct reb_simulation* sim;								// Pointer to the simulation REBOUNDx is linked to.
 	struct rebx_effect* effects;		                    // Linked list with pointers to all the effects added to the simulation.
 	struct rebx_param_to_be_freed* params_to_be_freed; 		// Linked list with pointers to all parameters allocated by REBOUNDx (for later freeing).
-
+    struct rebx_back_reaction_scheme back_reactions;              // Structure for how to handle uncompensated back reactions
 };
 
 /*****************************

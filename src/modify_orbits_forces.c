@@ -43,30 +43,23 @@ struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct re
 
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
     const struct rebx_params_modify_orbits_forces* const params = effect->paramsPtr;
+    rebx_tools_parameterized_force(sim, params->coordinates, params->first_index, params->last_index, function);
+
     const int N_real = sim->N - sim->N_var;
 
     struct reb_particle com;
-    switch(params->coordinates){
-    case JACOBI:
-        com = reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
-        break;
-    case BARYCENTRIC:
-        com = reb_get_com(sim);                     // COM of whole system
-        break;
-    case HELIOCENTRIC:
-        com = sim->particles[0];                    // Use the central body as the reference
-        break;
-    default:
-        fprintf(stderr, "coordinates in parameters for modify_orbits_forces are not supported.\n");
-        exit(1);
-    }
+    double M_tot;
 
-    struct reb_particle* p0 = &sim->particles[0];
+    com = reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
+    M_tot = com.m;
+
     for(int i=N_real-1;i>0;--i){
         struct reb_particle* p = &sim->particles[i];
         if(params->coordinates == JACOBI){
+            M_tot = com.m;
             rebxtools_update_com_without_particle(&com, p);
         }
+        if 
         double tau_a = rebx_get_param_double(p, "tau_a");
         double tau_e = rebx_get_param_double(p, "tau_e");
         double tau_inc = rebx_get_param_double(p, "tau_inc");
@@ -110,7 +103,7 @@ void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_eff
         p->ax += ax;
         p->ay += ay;
         p->az += az;
-    }
-    reb_move_to_com(sim);
-}
 
+        rebx_apply_back_reactions(sim, params->coordinates, 0, i, p->m/M_tot, ax, ay, az);
+    }
+}
