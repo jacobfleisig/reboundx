@@ -57,9 +57,9 @@ void rebx_initialize(struct reb_simulation* sim, struct rebx_extras* rebx){
 
 	rebx->params_to_be_freed = NULL;
 	rebx->effects = NULL;
-    rebx->back_reactions.type = BARYCENTRIC;
+    /*rebx->back_reactions.type = BARYCENTRIC;
     rebx->back_reactions.first = 0;
-    rebx->back_reactions.last = -1;
+    rebx->back_reactions.last = -1;*/
 }
 
 /*****************************

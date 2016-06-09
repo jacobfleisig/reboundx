@@ -3,56 +3,78 @@
 #include <stdio.h>
 #include "rebxtools.h"
 
-void rebx_tools_parameterized_force(sim, enum rebx_coordinates coordinates, int first_index, int last_index, function);
+void rebx_ghost_effect(struct reb_simulation* sim, void* params, int first_index, int last_index, enum REBX_COORDINATES coordinates, int back_reactions_inclusive, struct reb_vec3d (*calculate_effect) (void* params, struct reb_particle* p, struct reb_particle* source)){
     const int N_real = sim->N - sim->N_var;
-
-    struct reb_particle com;
-    double M_tot;
-    
-    if(last_index == -1){
+    if (last_index == -1){
         last_index = N_real;
     }
 
-    switch(params->coordinates){
-    case JACOBI:
-        com = reb_get_com(sim, first_index, last_index);            // We start with outermost particle, so start with COM and peel off particles
-        M_tot = com.m;
-        break;
-    case BARYCENTRIC:
-        com = reb_get_com_range(sim, first_index, last_index);     // COM of whole system
-        M_tot = com.m;
-        break;
-    default:
-        fprintf(stderr, "coordinates in parameters for modify_orbits_forces are not supported.\n");
-        exit(1);
-    }
-
-    int last;
+    struct reb_particle* com = &reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
+    struct reb_vec3d a;
     double massratio;
-
-    for(int i=last_index-1;i>first;--i){
+    int last_br;
+    
+    for(int i=first_index; i<last_index;i++){
         struct reb_particle* p = &sim->particles[i];
-        if(params->coordinates == JACOBI){
-            M_tot = com.m;
-            rebxtools_update_com_without_particle(&com, p);
-        }
-
-        function(sim, p, com);
-        
-        last = last_index;
-        if(coordinates == JACOBI){
-            last = i+1;
+        if (coordinates == REBX_JACOBI){
+            rebxtools_update_com_without_particle(com, p);
         }
         
-        massratio = p->m/M_tot;
-        for(int i=first; i < last; i++){
-            sim->particles[i].ax -= massratio*ax;
-            sim->particles[i].ay -= massratio*ay;
-            sim->particles[i].az -= massratio*az;
+        a = calculate_effect(params, p, com); 
+        p->ax += a.x;
+        p->ay += a.y;
+        p->az += a.z;
+        switch(coordinates){
+        case REBX_BARYCENTRIC:
+            last_br = N_real;
+            massratio = p->m/com->m;
+            break;
+        case REBX_JACOBI:
+            if(back_reactions_inclusive){
+                last_br = i+1;
+                massratio = p->m/(com->.m + p->m);
+            }
+            else{
+                last_br = i;
+                massratio = p->m/com->.m;
+            }
+            break;
+        default:
+            fprintf(stderr, "The chosen REBX coordinates are not supported.\n");
+                    exit(1);
+        double massratio = p->m/(com->.m+p->m);
+        for(int j=0; j < last_br; j++){
+            sim->particles[j].ax -= massratio*a.x;
+            sim->particles[j].ay -= massratio*a.y;
+            sim->particles[j].az -= massratio*a.z;
         }
-    }
+}
 
-void rebx_apply_back_reactions(reb_simulation* sim, enum rebx_coordinates coordinates, int first, int index, double massratio, double ax, double ay, double az){
+void rebx_particle_effect(struct reb_simulation* sim, void* params, int first_index, int last_index, struct reb_particle* source, int source_index, int back_reactions_inclusive, struct reb_vec3d (*calculate_effect) (void* params, struct reb_particle* p, struct reb_particle* source)){
+    struct reb_vec3d a;
+    double massratio;
+    
+    for(int i=first_index; i<last_index;i++){
+        if (i == source_index){
+            continue;
+        }
+        struct reb_particle* p = &sim->particles[i];
+        a = calculate_effect(params, p, source); 
+        p->ax += a.x;
+        p->ay += a.y;
+        p->az += a.z;
+        if(back_reactions_inclusive){
+            massratio = p->m/(source->m + p->m);
+            p->ax -= massratio*a.x;
+            p->ay -= massratio*a.y;
+            p->az -= massratio*a.z;
+        }
+        else{
+            massratio = p->m/source->m;
+        }
+        source->ax -= massratio*a.x;
+        source->ay -= massratio*a.y;
+        source->az -= massratio*a.z;
 }
 
 static const struct reb_orbit reb_orbit_nan = {.d = NAN, .v = NAN, .h = NAN, .P = NAN, .n = NAN, .a = NAN, .e = NAN, .inc = NAN, .Omega = NAN, .omega = NAN, .pomega = NAN, .f = NAN, .M = NAN, .l = NAN};

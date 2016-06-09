@@ -47,18 +47,19 @@ extern const char* rebx_version_str;    ///<Version string.
  * @brief Enumeration for different coordinate systems.
  */
 enum REBX_COORDINATES{
-    JACOBI,                             ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
-    BARYCENTRIC,                        ///< Coordinates referenced to the center of mass of the whole system.
-    HELIOCENTRIC                        ///< Coordinates referenced to particles[0] in the simulation.
+    REBX_BARYCENTRIC,                        ///< Coordinates referenced to the center of mass of the whole system.
+    REBX_JACOBI,                             ///< Jacobi coordinates.  Default for REBOUND/REBOUNDx.
 };
 
 /**
  * @brief Enumeration for different ways of applying uncompensated back-reactions.
  */
-enum REBX_BACK_REACTIONS{
-    NONE,                               ///< Don't apply uncompensated back-reactions.  Center of mass may drift.
-    BARYCENTRIC,                        ///< Apply same back-reaction to particles with indices between first and last to keep COM fixed.
-}
+/*enum REBX_BACK_REACTIONS{
+    BARYCENTRIC,                        ///< Apply same back-reaction to all particles in simulation to keep COM fixed.
+    JACOBI,                             ///< Apply back-reaction to all particles with lower index in simulation to keep COM fixed.
+    JACOBI_INCLUSIVE,                   ///< Apply back-reaction to all particles with lower index in simulation AND self to keep COM fixed.
+};
+*/
 
 /*****************************************
   Parameter structures for each effect
@@ -79,8 +80,9 @@ struct rebx_params_gr {
 };
 
 struct rebx_params_gr_potential {
-    int source_index;                   ///< Index of particle in particles array causing GR corrections.
     double c;                           ///< Speed of light in units appropriate for sim->G and initial conditions.
+
+    double prefac;                      ///< Internal variable to speed up evaluation.
 };
 
 struct rebx_params_gr_full {

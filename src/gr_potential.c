@@ -40,34 +40,36 @@ struct rebx_params_gr_potential* rebx_add_gr_potential(struct rebx_extras* rebx,
 }
 
 void rebx_gr_potential(struct reb_simulation* const sim, struct rebx_effect* gr){
-    // Nobili & Roxburgh 1986
-    const struct rebx_params_gr_potential* const params = gr->paramsPtr;
-    const double C = params->c;
-    const int source_index = params->source_index;
-    const int _N_real = sim->N - sim->N_var;
-    const double G = sim->G;
-    struct reb_particle* const particles = sim->particles;
-    const struct reb_particle source = sim->particles[source_index];
-    
-    const double prefac1 = 6.*(G*source.m)*(G*source.m)/(C*C);
-    for (int i=0; i<_N_real; i++){
-        if(i == source_index){
-            continue;
+    const int N_real = sim->N - sim->N_var;
+    struct reb_vec3d a;
+    const int first_index = 0;
+    const int last_index = -1;
+    const int back_reactions_inclusive = 0;
+
+    for (int i=0; i<N_real; i++){
+        struct reb_particle* source = &sim->particles[i];
+        int gr_potential = rebx_get_param_int(source, "gr_potential");
+        if(gr_potential){
+            struct rebx_params_gr_potential* const params = gr->paramsPtr;
+            params->prefac = 6.*(sim->G*source->m)*(sim->G*source->m)/(params->c*params->c);
+            rebx_particle_effect(sim, params, first_index, last_index, source, i, back_reactions_inclusive, rebx_calculate_gr_potential);
         }
-        const struct reb_particle p = particles[i];
-        const double dx = p.x - source.x;
-        const double dy = p.y - source.y;
-        const double dz = p.z - source.z;
-        const double r2 = dx*dx + dy*dy + dz*dz;
-        const double prefac = prefac1/(r2*r2);
-        
-        particles[i].ax -= prefac*dx;
-        particles[i].ay -= prefac*dy;
-        particles[i].az -= prefac*dz;
-        particles[source_index].ax += p.m/source.m*prefac*dx;
-        particles[source_index].ay += p.m/source.m*prefac*dy;
-        particles[source_index].az += p.m/source.m*prefac*dz;
     }
+}
+
+struct reb_vec3d rebx_calculate_gr_potential(struct rebx_params_gr_potential* params, struct reb_particle* p, struct reb_particle* source){
+    const double dx = p->x - source->x;
+    const double dy = p->y - source->y;
+    const double dz = p->z - source->z;
+    const double r2 = dx*dx + dy*dy + dz*dz;
+    const double prefac = params->prefac/(r2*r2);
+   
+    struct reb_vec3d a;
+    a.x = -prefac*dx;
+    a.y = -prefac*dy;
+    a.z = -prefac*dz;
+
+    return a;
 }
 
 double rebx_gr_potential_hamiltonian(const struct reb_simulation* const sim, const struct rebx_params_gr_potential* const params){ 

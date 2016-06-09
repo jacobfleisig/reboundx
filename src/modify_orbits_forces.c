@@ -41,69 +41,69 @@ struct rebx_params_modify_orbits_forces* rebx_add_modify_orbits_forces(struct re
     return params;
 }
 
+reb_vec3d rebx_calculate_modify_orbits_forces(void* params, struct reb_particle* p, struct reb_particle* source){
+    double tau_a = rebx_get_param_double(p, "tau_a");
+    double tau_e = rebx_get_param_double(p, "tau_e");
+    double tau_inc = rebx_get_param_double(p, "tau_inc");
+
+    if(isnan(tau_a)){
+        rebx_set_param_double(p, "tau_a", INFINITY);
+        tau_a = INFINITY;
+    }
+    if(isnan(tau_e)){
+        rebx_set_param_double(p, "tau_e", INFINITY);
+        tau_e = INFINITY;
+    }
+    if(isnan(tau_inc)){
+        rebx_set_param_double(p, "tau_inc", INFINITY);
+        tau_inc = INFINITY;
+    }
+
+    const double dvx = p->vx - source.vx;
+    const double dvy = p->vy - source.vy;
+    const double dvz = p->vz - source.vz;
+
+    reb_vec3d a = {0};
+
+    a.x =  dvx/(2.*tau_a);
+    a.y =  dvy/(2.*tau_a);
+    a.z =  dvz/(2.*tau_a);
+
+    if (tau_e < INFINITY || tau_inc < INFINITY){   // need h and e vectors for both types
+        const double dx = p->x-source.x;
+        const double dy = p->y-source.y;
+        const double dz = p->z-source.z;
+        const double r = sqrt ( dx*dx + dy*dy + dz*dz );
+        const double vr = (dx*dvx + dy*dvy + dz*dvz)/r;
+        const double prefac = 2*vr/r;
+        a.x += prefac*dx/tau_e;
+        a.y += prefac*dy/tau_e;
+        a.z += prefac*dz/tau_e + 2.*dvz/tau_inc;
+    }
+    return a;
+}
+
 void rebx_modify_orbits_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
-    const struct rebx_params_modify_orbits_forces* const params = effect->paramsPtr;
-    rebx_tools_parameterized_force(sim, params->coordinates, params->first_index, params->last_index, function);
+    const struct rebx_params_modify_orbits_forces* const params = effect->paramsPtr; // if coordinates hardcoded can remove this and set NULL below
+    const int first_index = 1;
+    const int last_index = -1;
+    const int back_reactions_inclusive = 1;
 
-    const int N_real = sim->N - sim->N_var;
+    rebx_ghost_effect(sim, params, first_index, last_index, REBX_JACOBI, back_reactions_inclusive, rebx_calculate_modify_orbits_forces);
+}
 
-    struct reb_particle com;
-    double M_tot;
+void rebx_modify_orbits_around_particle_forces(struct reb_simulation* const sim, struct rebx_effect* const effect){
+    const int N_real = sim->N - sim_>N_var;
+    struct reb_vec3d a;
+    const int back_reactions_inclusive = 1;
 
-    com = reb_get_com(sim);                     // We start with outermost particle, so start with COM and peel off particles
-    M_tot = com.m;
-
-    for(int i=N_real-1;i>0;--i){
-        struct reb_particle* p = &sim->particles[i];
-        if(params->coordinates == JACOBI){
-            M_tot = com.m;
-            rebxtools_update_com_without_particle(&com, p);
+    for(int i=0; i < N_real; i++){
+        struct reb_particle* central_body = &sim->particles[i];
+        int modify_orbits = rebx_get_param_int(central_body, "modify_orbits");
+        if(modify_orbits){
+            int first_index = rebx_get_param_int(central_body, "modify_orbits_first_index");
+            int last_index= rebx_get_param_int(central_body, "modify_orbits_last_index");
+            rebx_particle_effect(sim, NULL, first_index, last_index, central_body, i, back_reactions_inclusive, rebx_calculate_modify_orbits_forces);
         }
-        if 
-        double tau_a = rebx_get_param_double(p, "tau_a");
-        double tau_e = rebx_get_param_double(p, "tau_e");
-        double tau_inc = rebx_get_param_double(p, "tau_inc");
-
-        if(isnan(tau_a)){
-            rebx_set_param_double(p, "tau_a", INFINITY);
-            tau_a = INFINITY;
-        }
-        if(isnan(tau_e)){
-            rebx_set_param_double(p, "tau_e", INFINITY);
-            tau_e = INFINITY;
-        }
-        if(isnan(tau_inc)){
-            rebx_set_param_double(p, "tau_inc", INFINITY);
-            tau_inc = INFINITY;
-        }
-
-        const double dvx = p->vx - com.vx;
-        const double dvy = p->vy - com.vy;
-        const double dvz = p->vz - com.vz;
-
-        double ax = 0.;
-        double ay = 0.;
-        double az = 0.;
-
-        ax =  dvx/(2.*tau_a);
-        ay =  dvy/(2.*tau_a);
-        az =  dvz/(2.*tau_a);
-
-        if (tau_e < INFINITY || tau_inc < INFINITY){   // need h and e vectors for both types
-            const double dx = p->x-com.x;
-            const double dy = p->y-com.y;
-            const double dz = p->z-com.z;
-            const double r = sqrt ( dx*dx + dy*dy + dz*dz );
-            const double vr = (dx*dvx + dy*dvy + dz*dvz)/r;
-            const double prefac = 2*vr/r;
-            ax += prefac*dx/tau_e;
-            ay += prefac*dy/tau_e;
-            az += prefac*dz/tau_e + 2.*dvz/tau_inc;
-        }
-        p->ax += ax;
-        p->ay += ay;
-        p->az += az;
-
-        rebx_apply_back_reactions(sim, params->coordinates, 0, i, p->m/M_tot, ax, ay, az);
     }
 }

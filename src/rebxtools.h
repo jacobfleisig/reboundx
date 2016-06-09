@@ -26,11 +26,19 @@
 #ifndef _REBXTOOLS_H
 #define _REBXTOOLS_H
 
-#include "rebound.h"
-
 #ifndef M_PI
 #define M_PI 3.1415926535879323846 
 #endif
+
+struct reb_simulation;
+struct reb_vec3d;
+struct reb_particle;
+struct reb_orbit;
+enum REBX_COORDINATES;
+
+void rebx_ghost_effect(struct reb_simulation* sim, void* params, int first_index, int last_index, enum REBX_COORDINATES coordinates, int back_reactions_inclusive, struct reb_vec3d (*calculate_effect) (void* params, struct reb_particle* p, struct reb_particle* source));
+
+void rebx_particle_effect(struct reb_simulation* sim, void* params, int first_index, int last_index, struct reb_particle* source, int source_index, int back_reactions_inclusive, struct reb_vec3d (*calculate_effect) (void* params, struct reb_particle* p, struct reb_particle* source));
 
 struct reb_orbit rebxtools_particle_to_orbit_err(double G, struct reb_particle* p, struct reb_particle* primary, int* err);
 
