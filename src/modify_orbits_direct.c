@@ -56,7 +56,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	// change in perihelion
 	double q0 = o.a*(1-o.e);
 	double d_q = 0.02/o.a; 
-	double d_a = (q0+d_q)/(1-o.e) - o.a;
+	double d_a = (q0+d_q)/(1.0-o.e) - o.a;
 
 	// every 100 orbital periods, give a particle a kick in semi-major axis	
 	if (time > 2.0*M_PI){
