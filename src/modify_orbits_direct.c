@@ -52,13 +52,16 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
 		return *p;
 	}
-
-	double d_a = 0.1;
+	
+	// change in perihelion
+	double q0 = o.a*(1-o.e);
+	double d_q = 0.02/o.a; 
+	double d_a = (q0+d_q)/(1-o.e) - o.a;
 
 	// every 100 orbital periods, give a particle a kick in semi-major axis	
 	if (time > 2.0*M_PI){
 		if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
-			if (o.a*(1-o.e) <= 0.3){    		
+			if ( q0 <= 0.1){    		
 				o.a += d_a;
 			}
 		}
