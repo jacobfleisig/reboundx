@@ -1,6 +1,6 @@
 /**
  * @file    modify_orbits_direct.c
- * @brief   Update orbital with prescribed timescales by directly changing orbital elements after each timestep.
+ * @brief   Update orbital element every 100 orbital periods as described by interactions w/ Neptune
  * @author  Dan Tamayo <tamayo.daniel@gmail.com>
  * 
  * @section     LICENSE
@@ -21,21 +21,6 @@
  * You should have received a copy of the GNU General Public License
  * along with rebound.  If not, see <http://www.gnu.org/licenses/>.
  *
- * The section after the dollar signs gets built into the documentation by a script.  All lines must start with space * space like below.
- * Tables always must be preceded and followed by a blank line.  See http://docutils.sourceforge.net/docs/user/rst/quickstart.html for a primer on rst.
- * $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
- *
- * $Orbit Modifications$       // Effect category (must be the first non-blank line after dollar signs and between dollar signs to be detected by script).
- *
- * ======================= ===============================================
- * Authors                 D. Tamayo
- * Implementation Paper    *In progress*
- * Based on                `Lee & Peale 2002 <http://labs.adsabs.harvard.edu/adsabs/abs/2002ApJ...567..596L/>`_. 
- * C Example               :ref:`c_example_modify_orbits`
- * Python Example          `Migration.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/Migration.ipynb>`_,
- *                         `EccAndIncDamping.ipynb <https://github.com/dtamayo/reboundx/blob/master/ipython_examples/EccAndIncDamping.ipynb>`_.
- * ======================= ===============================================
- * 
  */
 
 #include <stdio.h>
@@ -55,13 +40,12 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	
 	// change in perihelion
 	double q0 = o.a*(1-o.e);
-	double d_q = 0.02/o.a; 
-	double d_a = (q0+d_q)/(1.0-o.e) - o.a;
+	double d_a = 0.02*(1.0/o.a);
 
 	// every 100 orbital periods, give a particle a kick in semi-major axis	
-	if (time > 2.0*M_PI){
+	if (time > pow(o.a,3.0/2.0)*2.0*M_PI){
 		if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
-			if ( q0 <= 0.1){    		
+			if ( q0 <= 0.35){    		
 				o.a += d_a;
 			}
 		}
