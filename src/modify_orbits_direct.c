@@ -45,8 +45,12 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	// every 100 orbital periods, give a particle a kick in semi-major axis	
 	if (time > pow(o.a,3.0/2.0)*2.0*M_PI){
 		if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
-			if ( q0 <= 0.35){    		
-				o.a += d_a;
+			if ( o.a > 0 ){
+				if ( q0 <= 0.35){    		
+					o.a += d_a;
+					double d_e = (1.0-(q0/o.a)) - o.e;
+					o.e += d_e;
+				}
 			}
 		}
 	}
