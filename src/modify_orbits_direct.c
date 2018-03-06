@@ -28,6 +28,7 @@
 #include <math.h>
 #include "rebound.h"
 #include "reboundx.h"
+FILE* f = fopen("scattering.bin","w");
 
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* primary, const double dt){
 	int err=0;
@@ -46,10 +47,17 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	if (time > pow(o.a,3.0/2.0)*2.0*M_PI){
 		if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
 			if ( o.a > 0 ){
-				if ( q0 <= 0.35){    		
-					o.a += d_a;
+				if ( q0 <= 0.35){
+					double flip = reb_random_uniform(1,10);
+					if (flip > 5){
+						o.a += d_a;
+					}
+					else {
+						o.a -= d_a;
+					}
 					double d_e = (1.0-(q0/o.a)) - o.e;
 					o.e += d_e;
+					fwrite(time, sizeof(double),1,f);
 				}
 			}
 		}
