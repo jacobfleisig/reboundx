@@ -25,7 +25,13 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <time.h>
+#include <unistd.h>
 #include <math.h>
+#include <sys/types.h>
+#include <sys/stat.h>
+#include <omp.h>
 #include "rebound.h"
 #include "reboundx.h"
 
