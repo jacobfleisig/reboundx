@@ -35,11 +35,6 @@
 #include "rebound.h"
 #include "reboundx.h"
 
-int main () {
-	char scatfilename[100] = "scattered.bin";
-	memset(scatfilename,0,100);
-}	
-
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* primary, const double dt){
 	int err=0;
 	struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
@@ -67,7 +62,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 					}
 					double d_e = (1.0-(q0/o.a)) - o.e;
 					o.e += d_e;
-					FILE* f = fopen(scatfilename);
+					FILE* f = fopen('scattering.bin');
 					fwrite(time, sizeof(double),1,f);
 				}
 			}
