@@ -63,7 +63,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 					double d_e = (1.0-(q0/o.a)) - o.e;
 					o.e += d_e;
 					FILE* f = fopen("scattering.bin","w");
-					fwrite(time, sizeof(double),1,f);
+					fwrite(&time, sizeof(time),1,f);
 				}
 			}
 		}
