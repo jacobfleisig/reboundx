@@ -58,7 +58,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 						o.a += d_a;
 					}
 					else {
-						o.a -= d_a;
+						o.a -= d_a
 					}
 					double d_e = (1.0-(q0/o.a)) - o.e;
 					o.e += d_e;
