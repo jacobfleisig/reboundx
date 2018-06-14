@@ -44,22 +44,25 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 		return *p;
 	}
 	
-	// change in perihelion
+	// change in semi-major axis
 	double q0 = o.a*(1-o.e);
 	double d_a = 0.02*(1.0/o.a);
 
-	// every 100 orbital periods, give a particle a kick in semi-major axis	
+	// every 100 orbital periods (for a specific particle), give a particle a kick in semi-major axis	
 	if (time > pow(o.a,3.0/2.0)*2.0*M_PI){
 		if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
 			if ( o.a > 0 ){
 				if ( q0 <= 0.35){
+					// determine randomly whether to scatter particle inward or outward
 					double flip = reb_random_uniform(1,10);
+					// change semi-major axis
 					if (flip > 5){
 						o.a += d_a;
 					}
 					else {
 						o.a -= d_a;
 					}
+					// change eccentricity
 					double d_e = (1.0-(q0/o.a)) - o.e;
 					o.e += d_e;
 				}
