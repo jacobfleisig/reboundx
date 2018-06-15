@@ -54,7 +54,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 		// make sure semi-major axis is positive (a.k.a. bound orbit)
 		if ( o.a > 0 ){
 			// if particle is at pericenter, continue
-			if (M = 0){
+			if (M > -1e-1 && M < 1e-1){
 				// 1/100 odds to be scattered
 				double chance = reb_random_uniform(1,100);
 				if (chance <= 1.0){
