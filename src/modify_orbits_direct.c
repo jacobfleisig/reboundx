@@ -47,24 +47,30 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	// define perihelion and change in semi-major axis
 	double q0 = o.a*(1-o.e);
 	double d_a = 0.02*(1.0/o.a);
+	double M = o.M;
 
-	// every 100 orbital periods (for a specific particle), give a particle a kick in semi-major axis	
-	if (reb_output_check(sim,100.0*2.0*M_PI*pow(o.a,3.0/2.0))){
+	// if perihelion is small enough continue	
+	if (q0 <= 0.35){
+		// make sure semi-major axis is positive (a.k.a. bound orbit)
 		if ( o.a > 0 ){
-			// if perihelion small enough, give particle a kick
-			if ( q0 <= 0.35){
-				// determine randomly whether to scatter particle inward or outward
-				double flip = reb_random_uniform(1,10);
-				// change semi-major axis
-				if (flip > 5){
-					o.a += d_a;
+			// if particle is at pericenter continue
+			if (M > -1e3 && M < 1e3){
+				// 1/100 odds to be scattered
+				double chance = reb_random_uniform(1,100);
+				if (chance <= 1.0){
+					// determine randomly whether to scatter particle inward or outward
+					double flip = reb_random_uniform(1,10);
+					// change semi-major axis
+					if (flip > 5){
+						o.a += d_a;
+					}
+					else {
+						o.a -= d_a;
+					}
+					// change eccentricity
+					double d_e = (1.0-(q0/o.a)) - o.e;
+					o.e += d_e;
 				}
-				else {
-					o.a -= d_a;
-				}
-				// change eccentricity
-				double d_e = (1.0-(q0/o.a)) - o.e;
-				o.e += d_e;
 			}
 		}
 	}
