@@ -38,39 +38,38 @@
 static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simulation* const sim, struct rebx_effect* const effect, struct reb_particle* p, struct reb_particle* primary, const double dt){
 	int err=0;
 	struct reb_orbit o = reb_tools_particle_to_orbit_err(sim->G, *p, *primary, &err);
-	double time = sim->t;
 
 	if(err){        // mass of primary was 0 or p = primary.  Return same particle without doing anything.
 		return *p;
 	}
 	
 	// define perihelion and change in semi-major axis
-	double q0 = o.a*(1-o.e);
+	double q = o.a*(1-o.e);
+	double P = pow(o.a,3.0/2.0)*2.0*M_PI;
 	double d_a = 0.02*(1.0/o.a);
 	double M = o.M;
+	double last_dt = sim->dt_last_done;
+	double delta_M = (2.0*M_PI/P)*last_dt
 
-	// if perihelion is small enough, continue	
-	if (q0 <= 0.35){
-		// make sure semi-major axis is positive (a.k.a. bound orbit)
-		if ( o.a > 0 ){
-			// if particle is at pericenter, continue
-			if (M > -1e-1 && M < 1e-1){
-				// 1/100 odds to be scattered
-				double chance = reb_random_uniform(1,100);
-				if (chance <= 1.0){
-					// determine randomly whether to scatter particle inward or outward
-					double flip = reb_random_uniform(1,10);
-					// change semi-major axis
-					if (flip > 5){
-						o.a += d_a;
-					}
-					else {
-						o.a -= d_a;
-					}
-					// change eccentricity
-					double d_e = (1.0-(q0/o.a)) - o.e;
-					o.e += d_e;
+	// if perihelion is small enough and semi-major axis isn't wonky, continue	
+	if (q <= 0.35 && o.a > 0){
+		// if particle is at pericenter, continue
+		if (M > -1.0*delta_M && M < delta_M){
+			// 1/100 odds to be scattered
+			double chance = reb_random_uniform(0,1);
+			if (chance <= 0.01){
+				// determine randomly whether to scatter particle inward or outward
+				double flip = reb_random_uniform(0,1);
+				// change semi-major axis
+				if (flip >= 0.5){
+					o.a += d_a;
 				}
+				else {
+					o.a -= d_a;
+				}
+				// change eccentricity
+				double d_e = (1.0-(q0/o.a)) - o.e;
+				o.e += d_e;
 			}
 		}
 	}
