@@ -46,7 +46,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	// define perihelion and change in semi-major axis
 	double q = o.a*(1-o.e);
 	double P = pow(o.a,3.0/2.0)*2.0*M_PI;
-	double d_a = 0.02*(1.0/o.a);
+	double d_a = 0.002*o.a;
 	double M = o.M;
 	double last_dt = sim->dt_last_done;
 	double delta_M = (2.0*M_PI/P)*last_dt;
@@ -55,22 +55,18 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	if (q <= 0.35 && o.a > 0){
 		// if particle is at pericenter, continue
 		if (M > -1.0*delta_M && M < delta_M){
-			// 1/100 odds to be scattered
-			double chance = reb_random_uniform(0,1);
-			if (chance <= 0.01){
-				// determine randomly whether to scatter particle inward or outward
-				double flip = reb_random_uniform(0,1);
-				// change semi-major axis
-				if (flip >= 0.5){
-					o.a += d_a;
-				}
-				else {
-					o.a -= d_a;
-				}
-				// change eccentricity
-				double d_e = (1.0-(q/o.a)) - o.e;
-				o.e += d_e;
+			// determine randomly whether to scatter particle inward or outward
+			double flip = reb_random_uniform(0,1);
+			// change semi-major axis
+			if (flip > 0.5){
+				o.a += d_a;
 			}
+			else {
+				o.a -= d_a;
+			}
+			// change eccentricity
+			double d_e = (1.0-(q/o.a)) - o.e;
+			o.e += d_e;
 		}
 	}
 
