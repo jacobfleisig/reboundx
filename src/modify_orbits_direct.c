@@ -49,7 +49,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	double d_a = 0.02*(1.0/o.a);
 	double M = o.M;
 	double last_dt = sim->dt_last_done;
-	double delta_M = (2.0*M_PI/P)*last_dt
+	double delta_M = (2.0*M_PI/P)*last_dt;
 
 	// if perihelion is small enough and semi-major axis isn't wonky, continue	
 	if (q <= 0.35 && o.a > 0){
