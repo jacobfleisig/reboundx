@@ -55,7 +55,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	if (q <= 0.35 && o.a > 0){
 		// if particle is at pericenter, continue
 		if (M > -1.0*delta_M && M < delta_M){
-			// determine randomly whether to scatter particle inward or outward
+			// determine randomly whether to scatter particle inward or outward with a "coin flip"
 			double flip = reb_random_uniform(0,1);
 			// change semi-major axis, if particle approaching inner edge of disc: only scatter outwards
 			if (flip > 0.5 || o.a <= 0.35){
