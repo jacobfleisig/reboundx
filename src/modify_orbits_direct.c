@@ -52,7 +52,7 @@ static struct reb_particle rebx_calculate_modify_orbits_direct(struct reb_simula
 	double delta_M = (2.0*M_PI/P)*last_dt;
 
 	// if perihelion is small enough and semi-major axis isn't wonky, continue	
-	if (q <= 0.35 && o.a > 0){
+	if (q <= 0.35 && o.a > 0.35 &&){
 		// if particle is at pericenter, continue
 		if (M > -1.0*delta_M && M < delta_M){
 			// determine randomly whether to scatter particle inward or outward
